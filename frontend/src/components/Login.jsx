@@ -32,13 +32,17 @@ function Login() {
     }
     try {    
 
-    const res = await axios.post("/api/login/", {
+    const tokenRes = await axios.post("/token/", {
         username: formData.username,
         password: formData.password,
-      })
+      });
+    localStorage.setItem("access_token", tokenRes.data.access);
+    localStorage.setItem("refresh_token", tokenRes.data.refresh);
+
+    const userRes = await axios.get("/accounts/me/");
     setIsAuth(true);
-    setUser(res.data.username);
-    toast.success(res.data.message);
+    setUser(userRes.data.username);
+    toast.success("Login successful");
     
     setTimeout(() => {
     navigate('/dashboard');
@@ -47,8 +51,7 @@ function Login() {
 } catch (error) {
   if (error.response) {
     // Backend responded (400, 401, 404, etc.)
-    console.log(error.response.data)
-    alert(error.response.data.error)
+    alert(error.response.data.detail || "Login failed")
   } else if (error.request) {
     // Request sent, no response
     alert("Server not responding")

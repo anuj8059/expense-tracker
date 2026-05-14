@@ -1,7 +1,10 @@
 import axios from "axios";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const ChangePassword = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     oldPassword: "",
     newPassword: "",
@@ -9,7 +12,6 @@ const ChangePassword = () => {
   });
 
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const handleChange = (e) => {
     setFormData({
@@ -21,7 +23,6 @@ const ChangePassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
 
     if (!formData.oldPassword || !formData.newPassword) {
       setError("All fields are required");
@@ -33,19 +34,21 @@ const ChangePassword = () => {
       return;
     }
     try {
-    const response = await axios.post("/api/change-password/", {
+    const response = await axios.post("/accounts/change-password/", {
       old_password: formData.oldPassword,
       new_password: formData.newPassword,
     }
     );
     console.log(response);
 
-    setSuccess("Password changed successfully!");
+    toast.success("Password changed successfully!");
     setFormData({
       oldPassword: "",
       newPassword: "",
       confirmPassword: "",
-    });} catch (error) {
+    });
+    navigate("/dashboard");
+    } catch (error) {
       console.error("There was an error changing the password!", error);
       setError(error.response?.data.error || "Failed to change password.");
     }
@@ -64,10 +67,6 @@ const ChangePassword = () => {
         {error && (
           <p className="text-red-500 text-sm mb-3">{error}</p>
         )}
-        {success && (
-          <p className="text-green-600 text-sm mb-3">{success}</p>
-        )}
-
         <div className="mb-3">
           <label className="block text-sm font-medium mb-1">
             Old Password

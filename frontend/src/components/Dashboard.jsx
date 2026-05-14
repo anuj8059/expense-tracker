@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { toast } from "react-toastify";
 import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import axios from "axios";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 
 export default function ExpenseDashboard() {
@@ -107,6 +108,26 @@ export default function ExpenseDashboard() {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <h1 className="text-2xl font-bold mb-6">Expense Dashboard</h1>
+      <div className="flex flex-wrap gap-3 mb-6">
+        <Link
+          to="/add-expense"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        >
+          Add Expense
+        </Link>
+        <Link
+          to="/expenses"
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+        >
+          Manage Expense
+        </Link>
+        <Link
+          to="/expense-report"
+          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+        >
+          Expense Report
+        </Link>
+      </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

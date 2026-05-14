@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios"; // your axios instance
+import axios from "axios";
 
 const AuthContext = createContext();
 
@@ -8,15 +8,24 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // check login on app load / refresh
   useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      setIsAuth(false);
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     axios
-      .get("/api/me/", { withCredentials: true })
+      .get("/accounts/me/")
       .then((res) => {
         setIsAuth(true);
-        setUser(res.data.username);
+        setUser(res.data.username || null);
       })
       .catch(() => {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
         setIsAuth(false);
         setUser(null);
       })

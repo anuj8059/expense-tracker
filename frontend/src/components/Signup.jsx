@@ -2,9 +2,11 @@ import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { setIsAuth, setUser } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -29,21 +31,33 @@ const Signup = () => {
     
     try {    
 
-    const res = await axios.post("/api/signup/", {
+    const res = await axios.post("/accounts/register/", {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-      })
-        console.log(res.data);
-        toast.success(res.data.message);
-        navigate('/')
+      });
+
+      const tokenRes = await axios.post("/token/", {
+        username: formData.username,
+        password: formData.password,
+      });
+
+      localStorage.setItem("access_token", tokenRes.data.access);
+      localStorage.setItem("refresh_token", tokenRes.data.refresh);
+
+      const userRes = await axios.get("/accounts/me/");
+      setIsAuth(true);
+      setUser(userRes.data.username || formData.username);
+
+      toast.success(res.data.message || "Signup successful");
+      navigate("/dashboard");
 
 
 
 
 } catch (error) {
      console.error("There was an error!", error.response);
-    toast.error(error.response.data.error || "Signup failed");
+    toast.error(error.response?.data?.error || "Signup failed");
 }
     
   };

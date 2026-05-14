@@ -2,7 +2,6 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import getCSRFToken from "../api/Csrf";
 
 const AddExpense = ({ isAuthenticated }) => {
   const navigate = useNavigate();
@@ -36,10 +35,7 @@ const AddExpense = ({ isAuthenticated }) => {
       item: formData.item,
       amount: formData.amount,
       date: formData.date,
-    },{ headers: {
-        "X-CSRFToken": getCSRFToken("csrftoken"),
-      } }
-    )
+    })
     .then((response) => {
       console.log("Expense added:", response.data);
       toast.success("Expense added successfully!");

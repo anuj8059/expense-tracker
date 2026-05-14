@@ -26,18 +26,24 @@ const ExpenseReport = () => {
     return (
         <div>
 
-            <div className="min-h-screen bg-gray-100 p-6">
+            <div className="min-h-screen bg-gray-100 p-4 sm:p-6">
                 <h2 className="text-2xl font-bold mb-4">Expense Report</h2>
-                <div className="max-w-7xl mx-auto shadow-lg p-6 mb-6 bg-white rounded-xl">
-                    <form onSubmit={fetchExpenses} className=' mb-5 flex justify-center gap-4'>
-                        From <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className=' border border-gray-400 cursor-pointer p-4'/>
-                        To <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className=' border border-gray-400 cursor-pointer p-4'/>
-                        <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                <div className="max-w-7xl mx-auto shadow-lg p-4 sm:p-6 mb-6 bg-white rounded-xl">
+                    <form onSubmit={fetchExpenses} className='mb-2 flex flex-col sm:flex-row sm:items-end justify-center gap-3 sm:gap-4'>
+                        <label className="flex flex-col text-sm font-medium text-gray-700 w-full sm:w-auto">
+                            From
+                            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className='mt-1 border border-gray-400 rounded cursor-pointer px-3 py-2 w-full sm:w-auto'/>
+                        </label>
+                        <label className="flex flex-col text-sm font-medium text-gray-700 w-full sm:w-auto">
+                            To
+                            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className='mt-1 border border-gray-400 rounded cursor-pointer px-3 py-2 w-full sm:w-auto'/>
+                        </label>
+                        <button type="submit" className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                             Generate Report
                         </button>
                     </form>
                 </div>
-                <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-6">
+                <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-4 sm:p-6">
 
                     <h1 className="text-3xl font-bold mb-4">My Expenses</h1>
 
@@ -54,7 +60,7 @@ const ExpenseReport = () => {
                         </p>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="w-full border-collapse">
+                            <table className="w-full min-w-[520px] border-collapse">
                                 <thead>
                                     <tr className="bg-gray-200 text-left">
                                         <th className="p-3">Item</th>
@@ -69,7 +75,7 @@ const ExpenseReport = () => {
                                             key={expense.id}
                                             className="border-b hover:bg-gray-50"
                                         >
-                                            <td className="p-3">{expense.expenseItem}</td>
+                                            <td className="p-3 break-words">{expense.expenseItem}</td>
                                             <td className="p-3">₹{expense.expenseAmount}</td>
                                             <td className="p-3"> {new Date(expense.date).toLocaleDateString("en-GB")}</td>
                                             

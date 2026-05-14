@@ -1,205 +1,95 @@
-import json
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
-from django.contrib.auth.decorators import login_required
-
-from rest_framework.decorators import api_view
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from .models import Expense
+from .serializers import ExpenseSerializer
 
-@api_view(['POST'])
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def add_expense(request):
-    print("Add expense called")
-    if request.method != "POST":
-        return JsonResponse(
-            {"error": "Invalid request method"},
-            status=405
-        )
+    item = request.data.get("item")
+    amount = request.data.get("amount")
+    date = request.data.get("date")
 
-    try:
+    if not item or not amount or not date:
+        return Response({"error": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        data = json.loads(request.body)
-        item = data.get("item")
-        amount = data.get("amount")
-        date = data.get("date")
+    expense = Expense.objects.create(
+        user=request.user,
+        expenseItem=item,
+        expenseAmount=amount,
+        expenseDate=date,
+    )
+    serializer = ExpenseSerializer(expense)
+    return Response(
+        {"message": "Expense added successfully", "expense": serializer.data},
+        status=status.HTTP_201_CREATED,
+    )
 
-        if not item or not amount or not date:
-            return JsonResponse(
-                {"error": "All fields are required"},
-                status=400
-            )
 
-
-        expense = Expense.objects.create(
-            user=request.user,   # 🔥 comes from session middleware
-            expenseItem=item,
-            expenseAmount=amount,
-            expenseDate=date
-        )
-
-        return JsonResponse({
-            "message": "Expense added successfully",
-            "expense": {
-                "id": expense.id,
-                "item": expense.expenseItem,
-                "amount": str(expense.expenseAmount),
-                "date": expense.expenseDate,
-                "created_at": expense.date
-            }
-        }, status=201)
-
-    except json.JSONDecodeError:
-        return JsonResponse(
-            {"error": "Invalid JSON"},
-            status=400
-        )
-
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def list_expenses(request):
-    if request.method != "GET":
-        return JsonResponse(
-            {"error": "Invalid request method"},
-            status=405
-        )
+    expenses = Expense.objects.filter(user=request.user).order_by("-date")
+    serializer = ExpenseSerializer(expenses, many=True)
+    return Response({"expenses": serializer.data}, status=status.HTTP_200_OK)
 
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def update_expense(request, expense_id):
     try:
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"error": "Authentication required"},
-                status=401
-            )
-        
-        expenses = Expense.objects.filter(user=request.user).order_by('-date').values(
-            'id', 'expenseItem', 'expenseAmount', 'expenseDate', 'date'
-        )   
-        
-        print(expenses)
-        return JsonResponse({
-            "expenses": list(expenses)
-        }, status=200)
-
-    except Exception as e:
-        return JsonResponse(
-            {"error": str(e)},
-            status=500
-        )
-    
-@csrf_exempt
-def update_expense(request, expense_id):    
-    if request.method != "PUT":
-        return JsonResponse(
-            {"error": "Invalid request method"},
-            status=405
-        )
-
-    try:
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"error": "Authentication required"},
-                status=401
-            )
-        
-        data = json.loads(request.body)
-
-        item = data.get("item")
-        amount = data.get("amount")
-        date = data.get("date")
-
-        if not item or not amount or not date:
-            return JsonResponse(
-                {"error": "All fields are required"},
-                status=400
-            )
-
-        try:
-            expense = Expense.objects.get(id=expense_id, user=request.user)
-        except Expense.DoesNotExist:
-            return JsonResponse(
-                {"error": "Expense not found"},
-                status=404
-            )
-
-        expense.expenseItem = item
-        expense.expenseAmount = amount
-        expense.expenseDate = date
-        expense.save()
-
-        return JsonResponse({
-            "message": "Expense updated successfully",
-            "expense": {
-                "id": expense.id,
-                "item": expense.expenseItem,
-                "amount": str(expense.expenseAmount),
-                "date": expense.expenseDate,
-                "created_at": expense.date
-            }
-        }, status=200)
-
-    except json.JSONDecodeError:
-        return JsonResponse(
-            {"error": "Invalid JSON"},
-            status=400
-        )
-    
-
-@csrf_exempt
-def delete_expense(request, expense_id):
-    if request.method != "DELETE":
-        return JsonResponse(
-            {"error": "Invalid request method"},
-            status=405
-        )
-
-    try:
-
         expense = Expense.objects.get(id=expense_id, user=request.user)
+    except Expense.DoesNotExist:
+        return Response({"error": "Expense not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        expense.delete()
+    item = request.data.get("item")
+    amount = request.data.get("amount")
+    date = request.data.get("date")
+    if not item or not amount or not date:
+        return Response({"error": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        return JsonResponse({
-            "message": "Expense deleted successfully"
-        }, status=200)
+    expense.expenseItem = item
+    expense.expenseAmount = amount
+    expense.expenseDate = date
+    expense.save()
 
-    except Exception as e:
-        return JsonResponse(
-            {"error": str(e)},
-            status=500
-        )
-    
-def expense_report(request):
-    if request.method != "GET":
-        return JsonResponse(
-            {"error": "Invalid request method"},
-            status=405
-        )
+    serializer = ExpenseSerializer(expense)
+    return Response(
+        {"message": "Expense updated successfully", "expense": serializer.data},
+        status=status.HTTP_200_OK,
+    )
 
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_expense(request, expense_id):
     try:
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"error": "Authentication required"},
-                status=401
-            )
-        
-        from_date = request.GET.get("from_date")
-        to_date = request.GET.get("to_date")
+        expense = Expense.objects.get(id=expense_id, user=request.user)
+    except Expense.DoesNotExist:
+        return Response({"error": "Expense not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        if not from_date or not to_date:
-            return JsonResponse(
-                {"error": "Both from_date and to_date are required"},
-                status=400
-            )
+    expense.delete()
+    return Response({"message": "Expense deleted successfully"}, status=status.HTTP_200_OK)
 
-        expenses = Expense.objects.filter(
-            user=request.user,
-            expenseDate__range=[from_date, to_date]
-        ).values('expenseItem', 'id', 'expenseAmount', 'expenseDate', 'date')
-        print(expenses)
-        return JsonResponse({
-            "expenses": list(expenses),
-        }, status=200)
-       
 
-    except Exception as e:
-        return JsonResponse(
-            {"error": str(e)},
-            status=500
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def expense_report(request):
+    from_date = request.query_params.get("from_date")
+    to_date = request.query_params.get("to_date")
+    if not from_date or not to_date:
+        return Response(
+            {"error": "Both from_date and to_date are required"},
+            status=status.HTTP_400_BAD_REQUEST,
         )
+
+    expenses = Expense.objects.filter(
+        user=request.user,
+        expenseDate__range=[from_date, to_date],
+    ).order_by("-date")
+    serializer = ExpenseSerializer(expenses, many=True)
+    return Response({"expenses": serializer.data}, status=status.HTTP_200_OK)

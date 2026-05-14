@@ -1,6 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import axios from "axios";
 import {
   FaPlusCircle,
   FaListAlt,
@@ -12,9 +11,10 @@ import {
 } from "react-icons/fa";
 import { useState } from "react";
 
-const NavItem = ({ to, icon, children }) => (
+const NavItem = ({ to, icon, children, onClick }) => (
   <Link
     to={to}
+    onClick={onClick}
     className="flex items-center gap-1 hover:text-blue-400 transition"
   >
     {icon}
@@ -30,19 +30,16 @@ const Navbar = () => {
   if (loading) return null;
 
   const handleLogout = async () => {
-    try {
-      await axios.post("/api/logout/", {}, { withCredentials: true });
-      setIsAuth(false);
-      setUser(null);
-      navigate("/");
-    } catch (error) {
-      console.log(error);
-      alert("Logout failed");
-    }
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    setIsAuth(false);
+    setUser(null);
+    setOpen(false);
+    navigate("/");
   };
 
   return (
-    <nav className="bg-gray-900 text-white px-6 py-3 shadow-md">
+    <nav className="relative z-50 bg-gray-900 text-white px-6 py-3 shadow-md">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         
         {/* Logo */}
@@ -63,25 +60,25 @@ const Navbar = () => {
           <div
             className={`${
               open ? "flex" : "hidden"
-            } md:flex flex-col md:flex-row gap-4 md:gap-6 text-sm absolute md:static top-16 left-0 w-full md:w-auto bg-gray-900 md:bg-transparent px-6 md:px-0 py-4 md:py-0`}
+            } md:flex flex-col md:flex-row gap-4 md:gap-6 text-sm absolute md:static top-full -mt-px left-0 z-50 w-full md:w-auto bg-gray-900 md:bg-transparent px-6 md:px-0 py-4 md:py-0`}
           >
-            <NavItem to="/dashboard" icon={<FaPlusCircle />}>
+            <NavItem to="/dashboard" icon={<FaPlusCircle />} onClick={() => setOpen(false)}>
               Dashboard
             </NavItem>
 
-            <NavItem to="/add-expense" icon={<FaPlusCircle />}>
+            <NavItem to="/add-expense" icon={<FaPlusCircle />} onClick={() => setOpen(false)}>
               Add Expense
             </NavItem>
 
-            <NavItem to="/expenses" icon={<FaListAlt />}>
+            <NavItem to="/expenses" icon={<FaListAlt />} onClick={() => setOpen(false)}>
               Manage Expense
             </NavItem>
 
-            <NavItem to="/expense-report" icon={<FaChartBar />}>
+            <NavItem to="/expense-report" icon={<FaChartBar />} onClick={() => setOpen(false)}>
               Expense Report
             </NavItem>
 
-            <NavItem to="/change-password" icon={<FaKey />}>
+            <NavItem to="/change-password" icon={<FaKey />} onClick={() => setOpen(false)}>
               Change Password
             </NavItem>
 
